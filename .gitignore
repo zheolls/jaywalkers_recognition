@@ -1,2 +1,6 @@
 .idea/
 change.jpg
+.vscode/
+output/
+__pycache__/
+

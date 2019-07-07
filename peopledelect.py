@@ -6,15 +6,12 @@ import numpy as np
 import argparse
 import imutils
 import cv2
-
-# construct the argument parse and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--images", required=True, help="path to images directory")
-args = vars(ap.parse_args())
-# initialize the HOG descriptor/person   detector
+import re
 hog = cv2.HOGDescriptor()
 hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
-for imagePath in paths.list_images(args["images"]):
+
+
+def get_walkers(imagePath):
     framelist=[]
     # load the image and resize it to (1) reduce detection time
     # and (2) improve detection accuracy
@@ -30,18 +27,11 @@ for imagePath in paths.list_images(args["images"]):
     for (x, y, w, h) in rects:
          cv2.rectangle(orig, (x, y), (x + w, y + h), (0, 0, 255), 2)
     rects = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rects])
-    pick = non_max_suppression(rects, probs=None, overlapThresh=0.65)
-
+    pick = non_max_suppression(rects, probs=None, overlapThresh=0.55)
     for (xA, yA, xB, yB) in pick:
         cv2.rectangle(image, (xA, yA), (xB, yB), (0, 255, 0), 2)
         framelist.append((xA, yA, xB, yB))
-    print(framelist)
-     # show some information on the number of bounding boxes
-    filename = imagePath[imagePath.rfind("/") + 1:]
-    print("[INFO] {}: {} original boxes, {} after suppression".format(
-          filename, len(rects), len(pick)))
-
-    #cv2.imwrite('change.jpg', image, [int(cv2.IMWRITE_JPEG_QUALITY), 95])  # 默认95
-    # cv2.imshow("Before NMS", orig)
-    # cv2.imshow("After NMS", image)
-    # cv2.waitKey(0)
+    imagePath=re.sub("images",'output',imagePath)
+    imagePath=re.sub(r"\.[a-z]+",'',imagePath)+'_walker'+re.findall(r"\.[a-z]+",imagePath)[0]
+    cv2.imwrite(imagePath, image, [int(cv2.IMWRITE_JPEG_QUALITY), 95])  # 默认95
+    return framelist
